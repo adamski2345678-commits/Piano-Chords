@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172033">
+<title>Chord Trainer</title>
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#1b2739;--panel2:#243249;--text:#f4f7fb;--muted:#aab8ca;--accent:#78d6bd;--good:#58d69a;--bad:#ff8585;--gold:#ffd36e}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#101827,#172438);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:760px;margin:auto;padding:18px 14px 40px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.top h1{font-size:25px;margin:8px 0}.sub{color:var(--muted);font-size:13px}
+.panel{background:var(--panel);border:1px solid #33435a;border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 8px 24px #0002}
+h2{font-size:18px;margin:0 0 12px}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+button,select{font:inherit;border:1px solid #50627a;border-radius:12px;padding:12px 14px;background:var(--panel2);color:var(--text);min-height:46px}
+button{cursor:pointer;font-weight:650}button.primary{background:var(--accent);color:#10221f;border:0}button:disabled{opacity:.45;cursor:not-allowed}
+.chordname{font-size:30px;font-weight:800;letter-spacing:.2px;margin:4px 0}.detail{color:var(--muted);font-size:14px}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.pill{background:#2a3a50;border-radius:99px;padding:7px 11px;font-size:13px}
+.keyboard{position:relative;height:142px;display:flex;margin:18px 0 8px;overflow:hidden;border-radius:8px;border:1px solid #64748b;background:#fff}
+.key{position:relative;flex:1;background:#f7f7f4;border-right:1px solid #b7bdc6;border-radius:0 0 4px 4px;color:#253044;display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;font-size:10px;min-width:0}
+.key.active{background:#ffd36e;color:#18202c;font-weight:800}
+.key.black{background:#222b3a;color:#fff;flex:none;width:4.6%;height:62%;margin:0;z-index:2;border:1px solid #080d15;border-radius:0 0 4px 4px;transform:translateX(-50%)}
+.key.black.active{background:#e8a92e;color:#17202b}
+.result{padding:12px;border-radius:12px;background:#26354b;margin-top:12px;min-height:48px}
+.result.good{border:1px solid var(--good);color:#baf5d7}.result.bad{border:1px solid var(--bad);color:#ffd0d0}
+.small{font-size:12px;color:var(--muted);line-height:1.5}.switchline{display:flex;align-items:center;gap:9px;margin:8px 0}.switchline input{width:19px;height:19px;accent-color:var(--accent)}
+.staff-wrap{margin:12px 0;padding:8px 10px;background:#f7f7f4;border:1px solid #c4cbd4;border-radius:12px;overflow:hidden}
+.staff-wrap[hidden]{display:none}.staff-wrap svg{display:block;width:100%;height:auto;max-height:150px}
+.staff-line{stroke:#354052;stroke-width:1.2}.staff-note{fill:#18202c;stroke:#18202c;stroke-width:1.2}.staff-stem{stroke:#18202c;stroke-width:1.5}.staff-ledger{stroke:#354052;stroke-width:1.2}.staff-label{fill:#354052;font:10px system-ui,sans-serif}
+select{width:100%}.stat{font-size:14px;color:var(--muted)}.stat strong{color:var(--text);font-size:20px}
+@media(min-width:600px){main{padding-top:26px}.panel{padding:20px}.chordname{font-size:36px}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><div><h1>🎹 Chord Trainer</h1><div class="sub">Listen to your piano · practise triads and seventh chords</div></div><div class="stat">Score<br><strong id="score">0 / 0</strong></div></div>
+
+  <section class="panel">
+    <h2>Practice settings</h2>
+    <div class="row">
+      <div><label class="small" for="quality">Chord types</label><select id="quality">
+        <option value="all">All chord types</option>
+        <optgroup label="Triads">
+          <option value="major">Major triad</option><option value="minor">Minor triad</option>
+          <option value="aug">Augmented triad</option><option value="dim">Diminished triad</option>
+        </optgroup>
+        <optgroup label="Suspended">
+          <option value="sus2">Suspended 2nd (sus2)</option><option value="sus4">Suspended 4th (sus4)</option>
+        </optgroup>
+        <optgroup label="Sixth chords">
+          <option value="maj6">Major 6th</option><option value="min6">Minor 6th</option>
+          <option value="maj69">Major 6/9</option><option value="min69">Minor 6/9</option>
+        </optgroup>
+        <optgroup label="Seventh chords">
+          <option value="maj7">Major 7th</option><option value="dom7">Dominant 7th</option>
+          <option value="min7">Minor 7th</option><option value="minmaj7">Minor-major 7th</option>
+          <option value="halfdim7">Half-diminished 7th</option><option value="dim7">Fully diminished 7th</option>
+          <option value="augmaj7">Augmented major 7th</option><option value="aug7">Augmented dominant 7th</option>
+        </optgroup>
+      </select></div>
+      <div><label class="small" for="inversion">Inversions</label><select id="inversion"><option value="all">All available inversions</option><option value="0">Root position</option><option value="1">First inversion</option><option value="2">Second inversion</option><option value="3">Third inversion</option><option value="4">Fourth inversion</option></select></div>
+    </div>
+    <div class="switchline"><input type="checkbox" id="hideName"><label for="hideName">Hide chord name (ear-training mode)</label></div>
+    <div class="switchline"><input type="checkbox" id="showStaff" checked><label for="showStaff">Show musical clef / staff</label></div>
+    <div class="small" style="margin:4px 0 2px">Microphone noise threshold: <strong id="thresholdValue">−70 dB</strong></div>
+    <input id="noiseThreshold" type="range" min="-85" max="-40" step="1" value="-70" style="width:100%;accent-color:var(--accent)">
+    <div class="small">Raise the threshold to ignore quieter background sounds; lower it to detect quieter piano notes.</div>
+    <button class="primary" id="newBtn" style="width:100%">Generate random chord</button>
+  </section>
+
+  <section class="panel">
+    <div class="small">PLAY THIS CHORD</div>
+    <div class="chordname" id="prompt">Press “Generate random chord”</div>
+    <div class="detail" id="description">The app will show the chord and its inversion here.</div>
+    <div id="staffWrap" class="staff-wrap" aria-label="Treble clef staff notation"><svg id="staffSvg" viewBox="0 0 340 126" role="img" aria-label="Chord notes on a treble clef staff"></svg></div>
+    <div class="pills" id="notes"></div>
+    <div class="keyboard" id="keyboard" aria-label="Piano keyboard"></div>
+    <div class="row">
+      <button class="primary" id="listenBtn">🎙 Start listening</button>
+      <button id="stopBtn" disabled>Stop microphone</button>
+    </div>
+    <div class="result" id="feedback">Allow microphone access, then play all the chord notes together. Use a quiet room for best results.</div>
+    <div class="small" style="margin-top:9px">Microphone detection is an estimate. A real piano's harmonics, room noise and sustain can affect note recognition. The app checks the chord's pitch classes, so octave differences are accepted.</div>
+  </section>
+
+  <section class="panel">
+    <h2>How to use</h2>
+    <ol class="small" style="padding-left:20px;line-height:1.8">
+      <li>Choose which chord types and inversions to practise; use the staff visibility and microphone threshold controls as needed.</li>
+      <li>Generate a random chord.</li>
+      <li>Tap “Start listening” and allow microphone access.</li>
+      <li>Play all the notes together and hold them briefly.</li>
+      <li>The app will show detected notes and whether the chord matches.</li>
+    </ol>
+    <div class="small">For microphone access, open this file in Android Chrome. Some Android versions require a secure (HTTPS) page for microphone access; if Chrome blocks the microphone on a locally opened file, the app will need to be hosted on a secure website.</div>
+  </section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const namesSharp=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const namesFlat=['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+const qualities={
+ major:{label:'Major',intervals:[0,4,7]},
+ minor:{label:'Minor',intervals:[0,3,7]},
+ aug:{label:'Augmented',intervals:[0,4,8]},
+ dim:{label:'Diminished',intervals:[0,3,6]},
+ sus2:{label:'Suspended 2nd (sus2)',intervals:[0,2,7]},
+ sus4:{label:'Suspended 4th (sus4)',intervals:[0,5,7]},
+ maj6:{label:'Major 6th',intervals:[0,4,7,9]},
+ min6:{label:'Minor 6th',intervals:[0,3,7,9]},
+ maj69:{label:'Major 6/9',intervals:[0,4,7,9,14]},
+ min69:{label:'Minor 6/9',intervals:[0,3,7,9,14]},
+ maj7:{label:'Major 7th',intervals:[0,4,7,11]},
+ dom7:{label:'Dominant 7th',intervals:[0,4,7,10]},
+ min7:{label:'Minor 7th',intervals:[0,3,7,10]},
+ minmaj7:{label:'Minor-major 7th',intervals:[0,3,7,11]},
+ halfdim7:{label:'Half-diminished 7th',intervals:[0,3,6,10]},
+ dim7:{label:'Fully diminished 7th',intervals:[0,3,6,9]},
+ augmaj7:{label:'Augmented major 7th',intervals:[0,4,8,11]},
+ aug7:{label:'Augmented dominant 7th',intervals:[0,4,8,10]}
+};
+let current=null, audioCtx=null, analyser=null, stream=null, raf=null, total=0, correct=0, stableCount=0, lastDetected='';
+function noteName(pc,preferFlat=false){return (preferFlat?namesFlat:namesSharp)[(pc+12)%12]}
+function spell(root,q){
+ const preferFlat=[1,3,5,8,10].includes(root);
+ const rootName=noteName(root,preferFlat);
+ const thirds={major:4,minor:3,aug:4,dim:3}[q];
+ const fifths={major:7,minor:7,aug:8,dim:6}[q];
+ // Standard common spelling for black-key roots; diminished/augmented use chromatic display names.
+ return [rootName,noteName(root+thirds,preferFlat),noteName(root+fifths,preferFlat)];
+}
+function buildChord(){
+ const qsel=$('quality').value, isel=$('inversion').value;
+ const qs=qsel==='all'?Object.keys(qualities):[qsel];
+ const root=Math.floor(Math.random()*12), q=qs[Math.floor(Math.random()*qs.length)];
+ const count=qualities[q].intervals.length;
+ const invs=isel==='all'?Array.from({length:count},(_,i)=>i):[Math.min(Number(isel),count-1)];
+ const inv=invs[Math.floor(Math.random()*invs.length)];
+ const ints=qualities[q].intervals;
+ const base=48+root; // C3 through B3
+ let midi=ints.map(i=>base+i);
+ // Each inversion moves the lowest note up one octave, keeping close position.
+ for(let n=0;n<inv;n++){const first=midi.shift();midi.push(first+12)}
+ const pcs=ints.map(i=>(root+i)%12);
+ return {root,q,inv,midi,pcs};
+}
+function renderKeyboard(ch){
+ const el=$('keyboard');el.innerHTML='';
+ const low=48,high=84,active=new Set(ch.midi);
+ // white-key positions across C3-B4, black keys overlaid in sequence
+ const white=[];for(let m=low;m<high;m++){if(![1,3,6,8,10].includes(m%12))white.push(m)}
+ white.forEach(m=>{const d=document.createElement('div');d.className='key'+(active.has(m)?' active':'');d.textContent=namesSharp[m%12];d.title=namesSharp[m%12];el.appendChild(d)});
+ // Overlay black keys at their proportional white-key boundary
+ const blacks=[];for(let m=low;m<high;m++){if([1,3,6,8,10].includes(m%12))blacks.push(m)}
+ blacks.forEach(m=>{const d=document.createElement('div');d.className='key black'+(active.has(m)?' active':'');d.textContent=namesSharp[m%12];d.style.position='absolute';const before=white.filter(w=>w<m).length;d.style.left=`calc(${before*100/white.length}% - 0.5px)`;d.title=namesSharp[m%12];el.appendChild(d)});
+}
+
+function renderStaff(ch){
+  const svg=$('staffSvg');
+  const yForMidi=m=>{
+    // Treble clef: E4 is the bottom line; each diatonic step moves 6 px.
+    const pc=m%12, octave=Math.floor(m/12)-1;
+    const letterIndex=[0,1,2,3,4,5,6][pc]; // chromatic placeholder; use nearest natural pitch below
+    const natural=[0,2,4,5,7,9,11];
+    let best=0; for(let i=0;i<natural.length;i++) if(natural[i]<=pc) best=i;
+    const semitone=natural[best], accidental=pc-semitone;
+    const absoluteStep=octave*7+best;
+    const e4Step=4*7+2;
+    return {y:82-(absoluteStep-e4Step)*6, accidental};
+  };
+  const lines=[34,46,58,70,82];
+  let s=lines.map(y=>`<line class="staff-line" x1="28" y1="${y}" x2="316" y2="${y}"/>`).join('');
+  s+=`<text x="7" y="76" fill="#354052" font-size="48" font-family="serif">𝄞</text>`;
+  const notes=ch.midi.slice().sort((a,b)=>a-b);
+  const spacing=Math.min(48,230/Math.max(1,notes.length-1));
+  const start=notes.length===1?170:74;
+  notes.forEach((m,i)=>{
+    const {y,accidental}=yForMidi(m), x=start+i*spacing;
+    if(y>82||y<34){for(let ly=88;ly<=y;ly+=12)s+=`<line class="staff-ledger" x1="${x-9}" y1="${ly}" x2="${x+9}" y2="${ly}"/>`;for(let ly=28;ly>=y;ly-=12)s+=`<line class="staff-ledger" x1="${x-9}" y1="${ly}" x2="${x+9}" y2="${ly}"/>`;}
+    if(accidental)s+=`<text class="staff-label" x="${x-17}" y="${y+4}">${accidental===1?'♯':'♭'}</text>`;
+    s+=`<ellipse class="staff-note" cx="${x}" cy="${y}" rx="6.5" ry="4.5" transform="rotate(-18 ${x} ${y})"/>`;
+    s+=`<line class="staff-stem" x1="${x+6}" y1="${y}" x2="${x+6}" y2="${y-28}"/>`;
+  });
+  svg.innerHTML=s;
+}
+
+function nextChord(){
+ current=buildChord();const q=qualities[current.q].label, inv=['Root position','First inversion','Second inversion','Third inversion'][current.inv];
+ $('prompt').textContent=$('hideName').checked?'Mystery chord':`${noteName(current.root)} ${q}`;
+ $('description').textContent=$('hideName').checked?'Identify and play the chord shown on the keyboard.':inv+' · '+current.midi.map(m=>namesSharp[m%12]+(Math.floor(m/12)-1)).join(' – ');
+ $('notes').innerHTML='';
+ current.midi.forEach(m=>{const p=document.createElement('span');p.className='pill';p.textContent=namesSharp[m%12]+' · '+(Math.floor(m/12)-1);$('notes').appendChild(p)});
+ renderKeyboard(current);
+ $('feedback').className='result';$('feedback').textContent='Play all the notes together and hold them briefly.';
+ stableCount=0;lastDetected='';
+}
+function midiToName(m){return namesSharp[(m+1200)%12]+(Math.floor(m/12)-1)}
+function detectPeaks(){
+ if(!analyser||!current)return;
+ const data=new Float32Array(analyser.frequencyBinCount);analyser.getFloatFrequencyData(data);
+ const sr=audioCtx.sampleRate, size=analyser.fftSize, peaks=[];
+ // Local spectral maxima, restricted to piano fundamental range.
+ for(let i=2;i<data.length-2;i++){
+   const f=i*sr/size;if(f<90||f>1100)continue;
+   if(data[i]>data[i-1]&&data[i]>=data[i+1]&&data[i]>-78){
+     const delta=.5*(data[i-1]-data[i+1])/(data[i-1]-2*data[i]+data[i+1]||1);
+     const freq=(i+delta)*sr/size;
+     const midi=Math.round(69+12*Math.log2(freq/440));
+     if(midi>=28&&midi<=90)peaks.push({midi,db:data[i],freq});
+   }
+ }
+ peaks.sort((a,b)=>b.db-a.db);
+ // Reduce duplicate octave/harmonic readings; collect strongest distinct pitch classes.
+ const chosen=[];
+ for(const p of peaks){
+   if(chosen.some(x=>x.midi===p.midi||((x.midi-p.midi)%12===0)))continue;
+   chosen.push(p);if(chosen.length>=8)break;
+ }
+ const detected=[...new Set(chosen.map(p=>p.midi%12))].sort((a,b)=>a-b);
+ const target=[...new Set(current.pcs)].sort((a,b)=>a-b);
+ const matched=target.length===detected.length&&target.every((v,i)=>v===detected[i]);
+ const noteText=chosen.slice(0,5).map(p=>midiToName(p.midi)).join(', ');
+ if(noteText!==lastDetected){lastDetected=noteText;stableCount=0}
+ if(detected.length>=Math.min(2,target.length))stableCount++;
+ if(matched&&stableCount>3){
+   $('feedback').className='result good';
+   $('feedback').textContent='✓ Correct! Detected: '+noteText+'. Generate another chord when ready.';
+   if(!current.scored){correct++;total++;current.scored=true;updateScore()}
+ }else if(chosen.length){
+   $('feedback').className='result';
+   $('feedback').textContent='Hearing: '+noteText+(detected.length>=2?' · Keep holding or adjust the notes.':' · Listening for the other notes…');
+   if(stableCount>8&&detected.length>=2){
+     const missing=target.filter(n=>!detected.includes(n)).map(n=>noteName(n));
+     const extra=detected.filter(n=>!target.includes(n)).map(n=>noteName(n));
+     if(missing.length||extra.length){
+       $('feedback').className='result bad';
+       $('feedback').textContent='Not quite. '+(missing.length?'Missing: '+missing.join(', ')+'. ':'')+(extra.length?'Unexpected: '+extra.join(', ')+'.':'');
+     }
+   }
+ }
+ raf=requestAnimationFrame(detectPeaks);
+}
+function updateScore(){$('score').textContent=correct+' / '+total}
+async function startMic(){
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const source=audioCtx.createMediaStreamSource(stream);analyser=audioCtx.createAnalyser();analyser.fftSize=16384;analyser.smoothingTimeConstant=.72;source.connect(analyser);
+  $('listenBtn').disabled=true;$('stopBtn').disabled=false;
+  $('feedback').className='result';$('feedback').textContent='Microphone on. Play the chord and hold it for a moment.';
+  detectPeaks();
+ }catch(e){$('feedback').className='result bad';$('feedback').textContent='Could not access microphone: '+e.message+'. Check Chrome permissions and try again.'}
+}
+function stopMic(){
+ if(raf)cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());if(audioCtx)audioCtx.close();
+ stream=null;audioCtx=null;analyser=null;$('listenBtn').disabled=false;$('stopBtn').disabled=true;
+ $('feedback').className='result';$('feedback').textContent='Microphone stopped.';
+}
+$('newBtn').addEventListener('click',nextChord);$('listenBtn').addEventListener('click',startMic);$('stopBtn').addEventListener('click',stopMic);
+$('hideName').addEventListener('change',()=>{if(current){$('prompt').textContent=$('hideName').checked?'Mystery chord':`${noteName(current.root)} ${qualities[current.q].label}`;$('description').textContent=$('hideName').checked?'Identify and play the chord shown on the keyboard.':['Root position','First inversion','Second inversion','Third inversion','Fourth inversion'][current.inv]+' · '+current.midi.map(m=>midiToName(m)).join(' – ')}});
+$('showStaff').addEventListener('change',()=>{$('staffWrap').hidden=!$('showStaff').checked;});
+$('noiseThreshold').addEventListener('input',()=>{$('thresholdValue').textContent=$('noiseThreshold').value+' dB';});
+nextChord();
+</script>
+</body></html>
